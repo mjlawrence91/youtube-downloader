@@ -1,0 +1,34 @@
+{
+  "name": "youtube-download",
+  "version": "0.0.1",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha test/ --recursive -u tdd",
+    "watch:test": "nodemon --watch test/ --recursive --exec npm run test",
+    "rm-node": "rm -rf node_modules package-lock.json"
+  },
+  "author": "Matt Lawrence",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "config": "^1.26.1",
+    "del": "^3.0.0",
+    "yargs": "^8.0.2",
+    "youtube-dl": "^1.11.1",
+    "youtube-node": "^1.3.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^7.2.3",
+    "chai": "^4.0.2",
+    "chai-as-promised": "^7.0.0",
+    "eslint": "^4.1.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.6.0",
+    "eslint-plugin-node": "^5.0.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "mocha": "^3.4.2",
+    "nodemon": "^1.11.0"
+  }
+}
