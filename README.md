@@ -21,6 +21,8 @@ After pulling from the Git repo (use the `typescript` branch), create a `config`
 }
 ```
 
+## Usage
+
 Run `npm run build` and then run one of the following commands:
 
 ```
