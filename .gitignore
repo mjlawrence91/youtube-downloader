@@ -17,6 +17,7 @@ config
 dist
 media
 node_modules
+typings
 
 # NPM generated files #
 #######################

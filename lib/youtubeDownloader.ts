@@ -1,28 +1,46 @@
 import * as fs from 'fs'
-import {promisify} from 'util'
+import * as path from 'path'
 import * as childProcess from 'child_process'
+import {promisify} from 'util'
 import * as config from 'config'
 import * as YouTube from 'youtube-node'
 
 class YouTubeDownloader {
-  private _videos
-  private _simulate: Boolean
-  private _path: String
-  private _youTube
-  private _youtubeSearch
+  private _videos: Array<YouTubeVideo>
+  private _simulate: boolean
+  private _path: string
+  private _youTube: YouTube
+  private _youtubeSearch: any
 
-  static get API_KEY (): String {
+  private static get API_KEY (): string {
     return config.get('apiKey')
   }
 
-  static get YOUTUBE_OPTIONS (): Array<String> {
-    return config.get('youtubeOptions')
+  private static get YOUTUBE_OPTIONS (): Array<string> {
+    let configOptions: Array<string>
+
+    try {
+      configOptions = config.get('youtubeOptions')
+    } catch (_) {
+      configOptions = ['-f best', '--write-sub', '--sub-lang=en', ' --embed-subs', '--add-metadata']
+    }
+    return configOptions
   }
 
   constructor () {
-    this._videos = null
+    this._videos = []
     this._simulate = false
-    this._path = 'media'
+
+    let mediaFolder: string = ''
+
+    try {
+      mediaFolder = config.get('downloadPath')
+    } catch (e) {
+      mediaFolder = 'media/'
+    }
+
+    const basePath: string = path.resolve(__dirname, '../../')
+    this._path = basePath + '/' + mediaFolder
 
     this._youTube = new YouTube()
     this._youTube.setKey(YouTubeDownloader.API_KEY)
@@ -31,7 +49,7 @@ class YouTubeDownloader {
     this._init()
   }
 
-  async _init () {
+  private async _init (): Promise<void> {
     const mkdir = promisify(fs.mkdir)
     const stat = promisify(fs.stat)
 
@@ -42,7 +60,7 @@ class YouTubeDownloader {
     }
   }
 
-  async search (term, resultCount = 50, options = {store: true}) {
+  public async search (term: string, resultCount: number = 50, options: SearchOptions = {store: true}) {
     if (!term) {
       return Promise.reject(new Error('Please specify a search term.'))
     }
@@ -57,7 +75,8 @@ class YouTubeDownloader {
 
     const {items} = await this._youtubeSearch(term, resultCount)
 
-    const videos = items.filter(result => result.id.kind === 'youtube#video')
+    const videos: Array<YouTubeVideo> = items
+      .filter(result => result.id.kind === 'youtube#video')
       .map(result => {
         const videoID = result.id.videoId
         const url = `https://www.youtube.com/watch?v=${videoID}`
@@ -65,71 +84,67 @@ class YouTubeDownloader {
         return {title, id: videoID, url}
       })
 
-    if (options && options.store) {
-      this.videos = videos
-    }
-
-    return this.videos
+    return Promise.resolve(videos)
   }
 
-  async downloadAll () {
-    if (!this._videos || this._videos.length === 0) {
-      return Promise.reject(new Error('There are no videos in the download queue.'))
-    }
-
+  public async downloadAll (): Promise<void> {
     this._videos.forEach(async video => {
       await this.download(video.url)
     })
   }
 
-  async download (url) {
+  public async download (url: string): Promise<object|Error> {
     if (!url) {
       return Promise.reject(new Error('Please specify a URL to download.'))
     }
 
     return new Promise((resolve, reject) => {
-      const args = [url, ...this._resolveYouTubeOptions()]
+      const args: Array<string> = [url, ...this._resolveYouTubeOptions()]
 
       if (this._simulate) {
         args.push('--simulate')
       }
 
-      const ytdl = childProcess.spawn('youtube-dl', args)
+      const ytdl: childProcess.ChildProcess = childProcess.spawn('youtube-dl', args)
       ytdl.stdout.on('data', data => console.log(`stdout: ${data}`))
       ytdl.stderr.on('data', data => console.log(`stderr: ${data}`))
       ytdl.on('close', _ => resolve())
     })
   }
 
-  _resolveYouTubeOptions () {
-    if (!this._path) {
-      throw new Error('Please specify a path to download videos to.')
+  private _resolveYouTubeOptions (): Array<string> {
+    if (!this.path) {
+      throw new Error('Please specify a path to download files.')
     }
 
     return [
       ...YouTubeDownloader.YOUTUBE_OPTIONS,
-      `-o${this._path}/%(title)s.%(ext)s` // Not sure why not leaving a space between "-o" and the path works...
+      `-o${this.path}/%(title)s.%(ext)s` // Not sure why removing the space between "-o" and the path works...
     ]
   }
 
-  print () {
+  public print (): void {
     this.videos.map(video => `${video.title}\n\t${video.url}`)
       .forEach(video => console.log(video))
   }
 
-  set videos (_videos) {
+  public set videos (_videos: Array<YouTubeVideo>) {
     this._videos = _videos
   }
 
-  get videos () {
+  public get videos (): Array<YouTubeVideo> {
     return this._videos
   }
 
-  set simulate (_simulate) {
+  public set simulate (_simulate: boolean) {
     this._simulate = _simulate
   }
 
-  set path (_path) {
+  public get path (): string {
+    return this._path
+  }
+
+  public set path (_path: string) {
     if (!_path) {
       throw new Error('Please specify a path to download files.')
     }
