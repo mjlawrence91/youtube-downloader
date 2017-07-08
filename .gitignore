@@ -8,12 +8,13 @@
 ehthumbs.db
 Thumbs.db
 
-# Packages #
+# Directories #
 ############
 archive
 *.old
 certs
 config
+dist
 media
 node_modules
 
