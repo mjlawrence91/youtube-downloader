@@ -1,11 +1,12 @@
 {
-  "name": "youtube-download",
+  "name": "youtube-downloader",
   "version": "0.0.1",
   "main": "index.js",
   "private": true,
+  "bin": "dist/index.js",
   "scripts": {
     "prestart": "npm run build",
-    "start": "node dist/index.js",
+    "start": "youtube-downloader",
     "prebuild": "npm run clean",
     "build": "tsc",
     "prewatch": "npm run clean",
